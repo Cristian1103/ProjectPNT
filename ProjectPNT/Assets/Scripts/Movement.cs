@@ -4,39 +4,81 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    //  Variables
-    //  [SerializeField] inseamna ca poti sa il vezi si in editor in Unity
-    [SerializeField] private float moveSpeed;
-    [SerializeField] private float runSpeed;
+    public float speed;
+    Vector2 move;
+    Rigidbody2D rb;
 
-    //  private Vector2 moveDirection;
-    private Vector2 moveDirection;
+    public float acceleration = 100;
+    public float deacceleration = 50;
+    public float maxSpeed = 120;
 
-    //  O componenta a caracterului
-    public Rigidbody2D rb;
-
-    //  Update is called once per frame
-    private void Update()
+    public bool isDashButtonDown;
+    public float dashUnits = 5;
+    // Start is called before the first frame update
+    void Start()
     {
-        ProcessInputs();
+        rb = GetComponent<Rigidbody2D>();
+        //  Trec in variabila rb componenta de tip Rigidbody2D;
+        //  astfel pot accesa properties de la Rigidbody2D
     }
 
-    //  FixedUpdate is called more times per frame
-    private void FixedUpdate()
+    void FixedUpdate()
     {
-        MoveCharacter();
+        //rb.AddForce(move * speed * Time.deltaTime);
+        Move();
+        rb.velocity = move * speed * Time.deltaTime;
     }
 
-    private void ProcessInputs()
+    // Update is called once per frame
+    void Update()
     {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveY = Input.GetAxis("Vertical");
-        moveDirection = new Vector2(moveX, moveY).normalized;
+        //move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        //Move();
+        Dash();
     }
 
-    private void MoveCharacter()
+    private void Move()
     {
-        rb.velocity = new Vector2(moveDirection.x * moveSpeed, moveDirection.y * moveSpeed);
-        //  TODO running
+        move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        CalculateSpeed();
+        //Dash();
     }
+
+    private void CalculateSpeed()
+    {
+        if ((Input.GetKey(KeyCode.UpArrow) ^ Input.GetKey(KeyCode.DownArrow))
+            || (Input.GetKey(KeyCode.LeftArrow) ^ Input.GetKey(KeyCode.RightArrow)))
+        {
+            if (Mathf.Abs(move.x) > 0 || Mathf.Abs(move.y) > 0)
+            {
+                //Debug.Log(transform.position);
+                speed = speed + acceleration * Time.deltaTime;
+            }
+            //else
+            //{
+            //    speed = speed - deacceleration * Time.deltaTime;
+            //}
+            speed = Mathf.Clamp(speed, 0, maxSpeed);
+        }
+        else
+        {
+            speed = 0;
+        }
+    }
+
+    private void Dash()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //this.isDashButtonDown = true;
+            Debug.Log("am intrat cumetre");
+            rb.MovePosition(transform.position + (Vector3)move * this.dashUnits);
+        }
+        /*if (this.isDashButtonDown == true || Input.GetKey(KeyCode.UpArrow))
+        {
+            move = transform.position + (Vector3)move * this.dashUnits;
+            this.isDashButtonDown = false;
+        }*/
+    }
+
 }
